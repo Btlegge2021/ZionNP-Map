@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Zion National Park</title>
+    <link rel="stylesheet" href="css/leaflet171.css" />
+    <link rel="stylesheet" href="css/leaflet.draw.css" />
+    <link rel="stylesheet" href="css/leaflet-search.css"/>
+    <link rel='stylesheet' href="css/MarkerCluster.css"/>
+    <link rel="stylesheet" href="css/MarkerCluster.Default.css"/>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
+  </head>
+  <body>
+    <div id = 'mySidenav'class="sidenav">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <a id="modalButton">How To Use</a>
+      <a href="https://www.nps.gov/zion/index.htm">Zion Park Website</a>
+      <a href="https://www.nps.gov/zion/planyourvisit/upload/Zion-National-Park-2020-hiking-guide-ADA-vetted.pdf">Hiking Guide</a>
+      <h2>Filter Trail</h2>
+      <div class='btn-group'>
+        <button type="button" id='allbut' class="button" onclick="allMode()">All</button>
+        <button type='button' id='easyBut' class ='button' onclick="easyMode()">Easy</button>
+        <button type='button' id='mediumBut' class ='button' onclick="medMode()">Medium</button>
+        <button type='button' id='hardBut' class ='button'onclick='hardMode()'>Hard</button>
+      </div>
+      <!--<h2>Trail Filter</h2>
+      <div id="slider"></div>-->
+    </div>
+    
+    </div>
+    <div id="wrapper" styple='z-index:1;'>
+      <div id="header">
+        <span style="font-size:30px;cursor:pointer;float:left" onclick="openNav()">&#9776;</span>
+        <h1>Zion National Park</h1>
+        <input style="float: right;" type="button" class="button" onclick="stopEdits()" value="Turn Off Editing">
+        <input style="float: right;" type="button" class='button' onclick="startEdits()" value="Turn on Editing">
+      </div>
+      <div id="map" style="z-index: 1;"></div>
+      <!--<div id="controls">
+        <p>Click points for more information, or add your own.</br></p>
+        <input type="button" onclick="startEdits()" value="Click to Start Editing">
+        <input type="button" onclick="stopEdits()" value="Stop Your Editing Session"><br>
+        <div id="credits"><p>#webMapWorkshop - &copy;2015, Mike Foster</p></div>
+      </div>-->
+    </div>
+
+    <div id="dialog" title="Animal Report">     
+      <form>
+        <fieldset style="border: none;">
+          <ul style="list-style-type: none; padding-left: 0px;">
+            <li><label for="type">Animal Report</label></li>
+            <select id='type' name='type'>
+              <option value='Bear'>Bear</option>
+              <option value='Rattle Snake'>Rattle Snake</option>
+              <option value='Mountain Lion'>Moutain Lion</option>
+            </select>
+            <!--<li><input type="text" name="type" id="type" placeholder="Enter your name" class="text ui-widget-content ui-corner-all"></li>-->
+            <li><label for="description">Description</label></li>
+            <li><textarea style ="width: 300px; height:100px;" type="text" name="description" id="description" placeholder="Description of Animal" class="text ui-widget-content ui-corner-all"></textarea></li>
+          </ul>
+          <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+      </form>
+    </div>
+    <div id= 'campDialog' title = 'Camp Review'>
+      <form>
+        <fieldset style='border: none;'>
+          <ul style="list-style-type: none; padding-left: 0px;">
+            <li><input style = 'display: none;' type='text' id= "campgroundname" name='campgroundname' placeholder='' class='text ui-widget-content ui-corner-all'></li>
+            <!--<li><label for='campground'>Campground Name</label></li>
+            <select id='campgroundname' name='campgroundname'>
+              <option value='Lava Point Campground'>Lava Point Campground</option>
+              <option value='South Campground'>South Campground</option>
+              <option value='Watchman Campground'>Watchman Campground</option>
+            </select>-->
+            <li><label for='rating'>Rating</label></li>
+            <select id='rating' name='rating'>
+              <option value='5'>5</option>
+              <option value='4'>4</option>
+              <option value='3'>3</option>
+              <option value='2'>2</option>
+              <option value='1'>1</option>
+            </select>
+            <li><label for = 'review'>Review</label></li>
+            <li><textarea style ="width: 300px; height:100px;" type='text' name='review' id='review' placeholder='Write Review' class='text ui-widget-content ui-corner-all'></textarea></li>
+          </ul>
+          <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+      </form>
+    </div>
+    <div id="myModal" class="modal">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <p>To search the trails click the <img src="icons/SearchSamp.png"height='30'> icon.</p>
+        <p>To add an animal sighting marker click the Turn on editing button then click the <img src="icons/addMarkIcon.png"height='35'> icon.</p>
+      </div>
+    
+    <!--<div id="dialog" title="Point Information">     
+      <form>
+        <fieldset style="border: none;">
+          <ul style="list-style-type: none; padding-left: 0px">
+            <li><label for="username">Your Name</label></li>
+            <li><input type="text" name="username" id="username" placeholder="Enter your name" class="text ui-widget-content ui-corner-all"></li>
+            <li><label for="description">About this Point</label></li>
+            <li><input type="text" name="description" id="description" placeholder="Description for this point" class="text ui-widget-content ui-corner-all"></li>
+          </ul>
+          <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+      </form>
+    </div>-->
+    <script src="js/leaflet-src2.js"></script>
+    <script src="js/leaflet.draw.js"></script>
+    <script src="js/leaflet-search.js"></script>
+    <script src="js/leaflet.markercluster-src.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
+    <script>
+    //Modal Functions
+    var modal = document.getElementById("myModal");
+    var btn = document.getElementById("modalButton");
+    var span = document.getElementsByClassName("close")[0];
+    
+    btn.onclick = function() {
+      modal.style.display = "block";
+      modal.style.height = '100%';
+      modal.style.width = '100%'
+    }
+
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+      modal.style.display = "none";
+    }
+      }
+
+    /*//Slider functions
+    $("#slider").slider({
+      value:1,
+      min:1,
+      max:3,
+      step:1
+    }).each(function(){
+      var opt = $(this).data().uiSlider.options;
+      var vals = opt.max - opt.min;
+      var levels = ['Easy', 'Medium', 'Hard'];
+      for(var i = 0; i <= vals; i++){
+        var el = $('<label>'+(levels[i])+'</label>').css('left',(i/vals*100)+'%');
+      }
+    });*/
+    //Functions for side nav
+    function openNav() {
+      //document.getElementById("mySidenav").style.width = "250px";
+      document.getElementById('mySidenav').style.width = "15%";
+      document.getElementById("map").style.width = "85%";
+      document.getElementById("header").style.width = "85%";
+      document.getElementById('map').style.float ="right";
+      document.getElementById('header').style.float ="right";
+      //document.getElementById("map").style.marginLeft = "250px";
+      //document.getElementById("header").style.marginLeft = "250px";
+      //document.getElementById("header").style.marginRight = "250px";
+    };
+
+    function closeNav() {
+      document.getElementById("mySidenav").style.width = "0";
+      document.getElementById("map").style.width = "100%";
+      document.getElementById("header").style.width = "100%";
+      //document.getElementById('map').style.float ="right";
+      //document.getElementById('header').style.float ="right";
+      //document.getElementById("map").style.marginLeft= "0";
+      //document.getElementById("header").style.marginLeft= "0";
+      //document.getElementById("header").style.marginRight= "0";
+    };
+    // Create Leaflet map object
+    var map = L.map('map',{ center: [37.23, -112.94], zoom: 10});
+
+    // Add Tile Layer basemap
+    osm = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      minZoom: 2,
+      maxZoom: 18
+    }).addTo(map);
+
+    var baseLayers = {
+		"OSM": osm
+	  };
+    var groupedLayers = L.layerGroup();
+
+    layerControl = L.control.layers(null,null,{collapsed:false}).addTo(map);
+    
+    // Declare Variables
+    // Create Global Variable to hold CartoDB points
+    var asLayer = null;
+
+    // Set your CartoDB Username
+    var cartoDBUsername = "blegge";
+
+    // Write SQL Selection Query to be Used on CartoDB Table
+    // Name of table is 'data_collector'
+    var sqlQuery = "SELECT * FROM animal_sightings";
+
+    // Create variable for Leaflet.draw features
+    var drawnItems = new L.FeatureGroup();
+    
+    var asIcon = new L.Icon({
+    iconUrl: 'icons/as.png',
+    iconSize: [37, 37],
+    iconAnchor: [16, 37],
+    popupAnchor: [0, -37]
+    });
+
+    var bearIcon = new L.Icon({
+    iconUrl: 'icons/bearR.png',
+    iconSize: [37, 37],
+    iconAnchor: [16, 37],
+    popupAnchor: [0, -37]
+    });
+
+    var snakeIcon = new L.Icon({
+    iconUrl: 'icons/snakesR.png',
+    iconSize: [37, 37],
+    iconAnchor: [16, 37],
+    popupAnchor: [0, -37]
+    });
+
+    var mlIcon = new L.Icon({
+    iconUrl: 'icons/leopard_snow.png',
+    iconSize: [37, 37],
+    iconAnchor: [16, 37],
+    popupAnchor: [0, -37]
+    });
+    // Get CartoDB selection as GeoJSON and Add to Map
+    /*function asPoints(){
+      $.getJSON("https://"+cartoDBUsername+".cartodb.com/api/v2/sql?format=GeoJSON&q="+sqlQuery, function(data) {
+        asLayer = L.geoJson(data,{
+          pointToLayer: function(feature,latlng){
+            var marker = L.marker(latlng, {
+              icon: asIcon
+            });
+            marker.bindPopup('<p>' + feature.properties.description + '<br />Type: ' + feature.properties.type +'<br />Date: '+ feature.properties.date+ '</p>');
+            return marker;
+          }
+        }).addTo(map);
+        layerControl.addOverlay(asLayer, "<img src= 'icons/as.png' height=24> Animal Sighting");
+      });
+    };*/
+
+    function asPoints(){
+      $.getJSON("https://"+cartoDBUsername+".cartodb.com/api/v2/sql?format=GeoJSON&q="+sqlQuery, function(data) {
+        asLayer = L.geoJson(data,{
+          pointToLayer: function(feature,latlng){
+            switch (feature.properties.type) {
+              
+              case 'Mountain Lion':
+              var marker = L.marker(latlng, {
+              icon: mlIcon
+            });
+            marker.bindPopup('<p>' + feature.properties.description + '<br />Type: ' + feature.properties.type +'<br />Date: '+ feature.properties.date+ '</p>');
+            return marker;
+                break;
+            
+              case 'Bear':
+              var marker = L.marker(latlng, {
+              icon: bearIcon
+            });
+            marker.bindPopup('<p>' + feature.properties.description + '<br />Type: ' + feature.properties.type +'<br />Date: '+ feature.properties.date+ '</p>');
+            return marker;
+                break;
+
+              case 'Rattle Snake':
+              var marker = L.marker(latlng, {
+              icon: snakeIcon
+            });
+            marker.bindPopup('<p>' + feature.properties.description + '<br />Type: ' + feature.properties.type +'<br />Date: '+ feature.properties.date+ '</p>');
+            return marker;
+                break;
+              default:
+              var marker = L.marker(latlng, {
+              icon: asIcon
+            });
+            marker.bindPopup('<p>' + feature.properties.description + '<br />Type: ' + feature.properties.type +'<br />Date: '+ feature.properties.date+ '</p>');
+            return marker;
+                break;
+            }  
+          }
+        }).addTo(map);
+        layerControl.addOverlay(asLayer, "<img src= 'icons/snakesR.png' height=24><img src= 'icons/bearR.png' height=24><img src= 'icons/leopard_snow.png' height=24> Animal Sighting");
+        //groupedLayers.addLayer(asLayer);
+      });
+    };
+
+
+//var campgroundsqlQuery = 'SELECT * FROM campground';
+var campgroundsqlQuery = 'SELECT cg.poilabel as title, cg.the_geom, round(avg(cr.rating),2) from campground as cg join camp_review as cr on cg.poilabel = cr.camp_name group by cg.the_geom, cg.poilabel'
+
+var campgroundIcon = new L.Icon({
+    iconUrl: 'icons/campground.png',
+    iconSize: [37, 37],
+    iconAnchor: [16, 37],
+    popupAnchor: [0, -37]
+    });
+function cgPoints(){
+  var cartoDBUserName = "blegge"
+  $.getJSON("https://"+cartoDBUserName+".carto.com/api/v2/sql?format=GeoJSON&q="+campgroundsqlQuery, function(data) {
+      campgroundLayer = L.geoJson(data,{
+        pointToLayer: function(feature, latlng) {
+      return L.marker(latlng, {
+        icon: campgroundIcon
+      });
+    },
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup('<p>' + feature.properties.title +'<br/>Rating: '+feature.properties.round+'<br/><input class="buttoncamp" type="button" onclick="submitreview()" value="Review"></p>');
+          layer.cartodb_id=feature.properties.cartodb_id;
+          layer.on('click', sendCampID);
+        }
+      }).addTo(map);
+      layerControl.addOverlay(campgroundLayer, "<img src= 'icons/campground.png' height=24> Campground");
+      //map.addControl(new L.Control.Search({layer: campgroundLayer}));
+      //groupedLayers.addLayer(campgroundIcon);
+  });
+};
+function sendCampID(e){
+  var id = e.target.feature.properties.title;
+  console.log(id);
+  document.getElementById('campgroundname').value = id; 
+  console.log(document.getElementById('campDialog'));
+  document.getElementById('ui-id-1').innerHTML = id +' Review';
+};
+function submitreview(){
+  rdialog.dialog("open");
+};
+
+var restroomsqlQuery = 'SELECT * FROM restrooms';
+var markerCluster = L.markerClusterGroup();
+var restroomIcon = new L.Icon({
+    iconUrl: 'icons/restroom.png',
+    iconSize: [37, 37],
+    iconAnchor: [16, 37],
+    popupAnchor: [0, -37]
+    });
+function rrPoints(){
+  var cartoDBUserName = 'blegge'
+  $.getJSON("https://"+cartoDBUserName+".carto.com/api/v2/sql?format=GeoJSON&q="+restroomsqlQuery, function(data) {
+      restroomLayer = L.geoJson(data,{
+        pointToLayer: function(feature, latlng) {
+        return L.marker(latlng, {
+          icon: restroomIcon
+        });
+      },
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup('<p>'+ feature.properties.poilabel +'</p>');
+          layer.cartodb_id=feature.properties.cartodb_id;
+        }
+      });//.addTo(map);
+      //layerControl.addOverlay(restroomLayer, "<img src= 'icons/restroom.png' height=24> Restroom");
+      markerCluster.addLayer(restroomLayer);
+      map.addLayer(markerCluster);
+      layerControl.addOverlay(markerCluster, "<img src= 'icons/restroom.png' height=24> Restroom");
+      //groupedLayers.addLayer(restroomLayer);
+});
+};
+
+//var trailsqlQuery = 'SELECT * FROM trails';
+var alltrailsql = 'SELECT the_geom, trllabel as title, trluse, Round(cast(miles as decimal),2) as miles from (SELECT *, (ST_Length(ST_Transform(the_geom, 2877))/5280) as miles from trails) as foo';
+var easytrailsql = alltrailsql + ' where miles < 2'
+var medtrailsql = alltrailsql+ " where miles > 2 and miles < 6"
+var hardtrailsql = alltrailsql + " where miles > 6"
+//var searchLayer = L.layerGroup().addTo(map);
+//map.addControl(new L.Control.Search({layer: searchLayer}));
+
+trailstyle = {color: '#000000',
+              opacity: '#000000',
+              weight: 2};
+function trailLines(tsql){
+  var cartoDBUserName = "blegge"
+  $.getJSON("https://"+cartoDBUserName+".carto.com/api/v2/sql?format=GeoJSON&q="+tsql, function(data) {
+      trailLayer = L.geoJson(data,{
+        style: trailstyle,
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup('<p>' + feature.properties.title +'</br>'+feature.properties.trluse+'</br>'+feature.properties.miles+' Miles</p>');
+          layer.cartodb_id=feature.properties.cartodb_id;
+        }
+      }).addTo(map);
+      //map.addControl(new L.Control.Search({layer: trailLayer, zoom: 15,container:'trailSearch'}));
+      controlSearch = new L.Control.Search({layer: trailLayer, zoom: 15, intial: false, marker: false});
+      map.addControl(controlSearch);
+      //map.addControl(new L.Control.Search({layer: trailLayer, zoom: 15}));
+      layerControl.addOverlay(trailLayer, "<img src= 'icons/trail.png' height = 24> Trail");
+      //groupedLayers.addLayer(trailLayer);
+});
+};
+
+var parkinglotsqlQuery = 'SELECT * FROM parking_lot';
+
+var parking_lotIcon = new L.Icon({
+    iconUrl: 'icons/parking_lot.png',
+    iconSize: [37, 37],
+    iconAnchor: [16, 37],
+    popupAnchor: [0, -37]
+    });
+
+function plPoints(){
+  var cartoDBUserName = 'blegge'
+  $.getJSON("https://"+cartoDBUserName+".carto.com/api/v2/sql?format=GeoJSON&q="+parkinglotsqlQuery, function(data) {
+      parkinglotLayer = L.geoJson(data,{
+        pointToLayer: function(feature, latlng) {
+      return L.marker(latlng, {
+        icon: parking_lotIcon
+      });
+    },
+        onEachFeature: function (feature, layer) {
+          layer.bindPopup('<p>' + feature.properties.poilabel +'</p>');
+          layer.cartodb_id=feature.properties.cartodb_id;
+        }
+      }).addTo(map);
+      layerControl.addOverlay(parkinglotLayer, "<img src= 'icons/parking_lot.png' height=24> Parking Lot");
+      //groupedLayers.addLayer(parkinglotLayer);
+  });
+};
+    // Run showAll function automatically when document loads
+    var parkinglotLayer = "";
+    $( document ).ready(function() {
+      layerControl._update();
+      rrPoints();
+      //plPoints();
+      trailLines(alltrailsql);
+      asPoints();
+      cgPoints();
+    });
+
+   //Record zoom level and add parking lot layer
+   map.on('zoomend', function(){
+      var zoomlevel = map.getZoom();
+      if (zoomlevel < 12){
+        if (map.hasLayer(parkinglotLayer)){
+        removePL();
+        }
+      } else {
+        console.log('no Parking lot layer');
+      }
+      if (zoomlevel >= 12){
+        if (map.hasLayer(parkinglotLayer)){
+          console.log("layer already added");
+        } else{
+         plPoints();
+        }
+      }
+      console.log(zoomlevel);
+    });    
+
+    function allMode(){
+      removeTrails();
+      trailLines(alltrailsql);
+    };
+
+    function easyMode(){
+      removeTrails();
+      trailLines(easytrailsql);
+    };
+
+    function medMode(){
+      removeTrails();
+      trailLines(medtrailsql);
+    };
+
+    function hardMode() {
+      removeTrails();
+      trailLines(hardtrailsql);
+    };
+
+   
+    var drawControl = new L.Control.Draw({
+      draw : {
+        polygon : false,
+        polyline : false,
+        rectangle : false,
+        circle : false
+      },
+      edit : false,
+      remove: false
+    });
+
+    var controlOnMap = false;
+
+    function startEdits(){
+      if(controlOnMap == true){
+        map.removeControl(drawControl);
+        controlOnMap = false;
+      }
+      map.addControl(drawControl);
+      controlOnMap = true;
+    };
+
+    function stopEdits(){
+      map.removeControl(drawControl);
+      controlOnMap = false;
+    };
+
+    map.on('draw:created', function (e) {
+        var layer = e.layer;
+
+        map.addLayer(drawnItems);
+        drawnItems.addLayer(layer);
+
+        asdialog.dialog( "open" );
+    });
+
+    var submitToProxy = function(q){
+      $.post("php/callProxy.php", { //Put path to your PHP file here
+        qurl:q,
+        cache: false,
+        timeStamp: new Date().getTime()
+      }, function(data) {
+        console.log(data);
+        refreshLayer();
+        camprefreshLayer();
+      });
+    };
+    //Camp review dialog
+    rdialog = $("#campDialog").dialog({
+      autoOpen: false,
+      height: 350,
+      width: 400,
+      modal: true,
+      position: {
+        my: "center center",
+        at: "center center",
+        of: "#map"
+      },
+      buttons: {
+        "Submit": submitReview,
+        Cancel: function() {
+          rdialog.dialog("close");
+        }
+      },
+      close: function() {
+        form[ 0 ].reset();
+        console.log("Dialog closed");
+      }
+    });
+
+    form = rdialog.find( "form" ).on( "submit", function( event ) {
+      event.preventDefault();
+      submitReview();
+    });
+    
+
+    //Animal Sighting Dialog
+    asdialog = $( "#dialog" ).dialog({
+      autoOpen: false,
+      height: 380,
+      width: 360,
+      modal: true,
+      position: {
+        my: "center center",
+        at: "center center",
+        of: "#map"
+      },
+      buttons: {
+        "Submit": setData,
+        Cancel: function() {
+          asdialog.dialog("close");
+          map.removeLayer(drawnItems);
+        }
+      },
+      close: function() {
+        form[ 0 ].reset();
+        asdialog.dialog("close");
+        map.removeLayer(drawnItems);
+        console.log("Dialog closed");
+      }
+    });
+
+    form = asdialog.find( "form" ).on( "submit", function( event ) {
+      event.preventDefault();
+      setData();
+    });
+    //Animal Sighting Set Data
+    function setData() {
+      var enteredtype = type.value;
+      var enteredDescription = description.value;
+      drawnItems.eachLayer(function (layer) {
+        var sql = "INSERT INTO animal_sightings (the_geom, description, type, latitude, longitude, date) VALUES (ST_SetSRID(ST_GeomFromGeoJSON('";
+        var a = layer.getLatLng();
+        console.log(a);
+        var sql2 ='{"type":"Point","coordinates":[' + a.lng + "," + a.lat + "]}'),4326),'" + enteredDescription + "','" + enteredtype + "','" + a.lat + "','" + a.lng +"', current_timestamp)";
+        var pURL = sql+sql2;
+        console.log(pURL);
+        submitToProxy(pURL);
+        console.log("Feature has been submitted to the Proxy");
+      });
+      map.removeLayer(drawnItems);
+      drawnItems = new L.FeatureGroup();
+      console.log("drawnItems has been cleared");
+      asdialog.dialog("close");
+    };
+    //Camp Review set data
+    function submitReview() {
+      var enteredCamp = campgroundname.value;
+      var enteredrating = rating.value;
+      var enteredreview = review.value;
+      var sql = "INSERT INTO camp_review (review, rating, camp_name) VALUES ";
+      var sql2 = "( '" +enteredreview+"', "+enteredrating+", '"+enteredCamp+"')";
+      var pURL = sql+sql2;
+      console.log(pURL);
+      submitToProxy(pURL);
+      console.log('Review has been submitted to the Proxy');
+      rdialog.dialog("close");
+    }
+    //Refresh Trail Layer
+    function removeTrails(){
+      if(map.hasLayer(trailLayer)){
+        map.removeLayer(trailLayer);
+      }
+      layerControl.removeLayer(trailLayer);
+      map.removeControl(controlSearch);
+    };
+    //Refresh Parking lot
+    function removePL(){
+      if(map.hasLayer(parkinglotLayer)){
+        map.removeLayer(parkinglotLayer);
+        layerControl.removeLayer(parkinglotLayer);
+      }
+      layerControl.removeLayer(parkinglotLayer);
+    };
+    //Refresh PL points
+    function plresfresh(){
+      if (map.hasLayer(asLayer)) {
+        layerControl.removeLayer(parkinglotLayer);
+        map.removeLayer(parkinglotLayer);
+      };
+      layerControl.removeLayer(parkinglotLayer);
+      plPoints();
+    };
+    // Refresh animal Sighting layer
+    function refreshLayer() {
+      if (map.hasLayer(asLayer)) {
+        layerControl.removeLayer(asLayer);
+        map.removeLayer(asLayer);
+      };
+      layerControl.removeLayer(asLayer);
+      asPoints();
+    };
+    // Refresh Camp Layer
+    function camprefreshLayer() {
+      if (map.hasLayer(campgroundLayer)) {
+        map.removeLayer(campgroundLayer);
+      };
+      layerControl.removeLayer(campgroundLayer);
+      cgPoints();
+    };
+    
+    </script>
+  </body>
+</html>
